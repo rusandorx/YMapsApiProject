@@ -99,11 +99,11 @@ class Example(QWidget):
 
         response = requests.get(geocoder_api_server, params=geocoder_params)
 
-        if not response:
+        json_response = response.json()
+        if not json_response["response"]["GeoObjectCollection"]["featureMember"]:
             print('Ничего не найдено')
             return
 
-        json_response = response.json()
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
         self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
