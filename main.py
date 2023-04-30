@@ -15,6 +15,7 @@ class Example(QWidget):
         self.zoom = 1
         self.coords = (37.617644, 55.755819)
         self.map_type = 'map'
+        self.point = None
 
         self.image = QLabel(self)
         self.getImage()
@@ -36,12 +37,18 @@ class Example(QWidget):
             self.coords = (self.coords[0] - self.zoom, self.coords[1])
         if event.key() == Qt.Key_Right:
             self.coords = (self.coords[0] + self.zoom, self.coords[1])
-        self.getImage()
-        self.update_image()
-
+        if event.key() in (Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right):
+            self.getImage()
+            self.update_image()
     def getImage(self):
-        map_request = f"http://static-maps.yandex.ru/1.x/?&ll={','.join(map(str, self.coords))}&spn={self.zoom},0.00619&l={self.map_type}"
-        response = requests.get(map_request)
+        geocoder_params = {
+            'll': ','.join(map(str, self.coords)),
+            'spn': str(self.zoom) + ',0.00619',
+            'l': self.map_type,
+            'pt': ','.join(map(str, self.point)) + ',pm2ntl' if self.point else None
+        }
+        map_request = f"http://static-maps.yandex.ru/1.x/"
+        response = requests.get(map_request, params=geocoder_params)
 
         if not response:
             print("Ошибка выполнения запроса:")
@@ -89,6 +96,7 @@ class Example(QWidget):
 
     def search(self):
         toponym_to_find = self.search_field.text()
+        self.search_field.clearFocus()
 
         geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
 
@@ -107,6 +115,7 @@ class Example(QWidget):
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
         self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
+        self.point = self.coords
         self.getImage()
         self.update_image()
 
