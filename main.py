@@ -69,7 +69,7 @@ class Example(QWidget):
 
         self.search_layout = QHBoxLayout(self)
         self.search_field = QLineEdit(self)
-        self.search_field.setFocusPolicy(Qt.NoFocus)
+        self.search_field.setFocusPolicy(Qt.ClickFocus)
 
         self.search_button = QPushButton(self)
         self.search_button.setText('Найти')
