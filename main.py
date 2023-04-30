@@ -1,5 +1,6 @@
 import os
 import sys
+from pprint import pprint
 
 import requests
 from PyQt5.QtCore import Qt
@@ -91,11 +92,13 @@ class Example(QWidget):
         self.clear_btn.setFocusPolicy(Qt.NoFocus)
         self.clear_btn.clicked.connect(self.clear_search)
 
+        self.address_field = QLabel(self)
+
         self.main_layout.addWidget(self.image)
         self.main_layout.addLayout(self.btns_layout)
         self.main_layout.addLayout(self.search_layout)
         self.main_layout.addWidget(self.clear_btn)
-
+        self.main_layout.addWidget(self.address_field)
 
     def update_image(self):
         self.pixmap = QPixmap(self.map_file)
@@ -122,6 +125,7 @@ class Example(QWidget):
 
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
+        self.address_field.setText(toponym['metaDataProperty']['GeocoderMetaData']['text'])
         self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
         self.point = self.coords
         self.getImage()
@@ -129,6 +133,7 @@ class Example(QWidget):
 
     def clear_search(self):
         self.point = None
+        self.address_field.setText('')
         self.getImage()
         self.update_image()
 
