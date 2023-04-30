@@ -62,9 +62,13 @@ class Example(QWidget):
         self.image.setPixmap(self.pixmap)
 
         self.map_type_btns = []
-        for label in ('map', 'sat', 'hybrid'):
+        x = 0
+        y = 0
+        for label in ('map', 'sat', 'sat,skl'):
             btn = QPushButton(self)
             btn.setText(label)
+            btn.move(x, y)
+            x += 140
             btn.clicked.connect(Example.decorate(self.change_map_type, label))
 
 
