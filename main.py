@@ -27,7 +27,7 @@ class Example(QWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp:
-            if self.zoom <= 5:
+            if self.zoom <= 20:
                 self.zoom /= 0.5
         if event.key() == Qt.Key_PageDown:
             if self.zoom >= 0.02:
@@ -46,9 +46,10 @@ class Example(QWidget):
 
     def mousePressEvent(self, event):
         x, y = event.x(), event.y()
-        if event.button() == Qt.LeftButton and 10 < x < SCREEN_SIZE[0] - 10 and 10 < y < SCREEN_SIZE[1] - 10:
+        if event.button() == Qt.LeftButton and 10 < x < SCREEN_SIZE[0] + 10 and 10 < y < SCREEN_SIZE[1] + 10:
             x, y = x - 10 - SCREEN_SIZE[0] // 2, y - 10 - SCREEN_SIZE[1] // 2
-            coords = (self.coords[0] + x * self.zoom / 360, self.coords[1] - y * self.zoom / 360)
+            print(x, y)
+            coords = (self.coords[0] + x * self.zoom / 180, self.coords[1] - y * self.zoom / 360)
             try:
                 self.handle_click(coords)
             except Exception as e:
@@ -57,7 +58,7 @@ class Example(QWidget):
     def getImage(self):
         geocoder_params = {
             'll': ','.join(map(str, self.coords)),
-            'spn': str(self.zoom) + ',0.00619',
+            'spn': str(self.zoom) + ',' + str(self.zoom),
             'l': self.map_type,
             'pt': ','.join(map(str, self.point)) + ',pm2ntl' if self.point else None
         }
