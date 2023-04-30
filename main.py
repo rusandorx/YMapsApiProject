@@ -29,7 +29,7 @@ class Example(QWidget):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_PageUp:
-            if self.zoom <= 20:
+            if self.zoom <= 10000:
                 self.zoom /= 0.5
         if event.key() == Qt.Key_PageDown:
             if self.zoom >= 0.02:
@@ -219,6 +219,23 @@ class Example(QWidget):
         os.remove(self.map_file)
 
     def find_organization(self, coords):
+        geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+
+        geocoder_params = {
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            'geocode': ','.join(map(str, coords)),
+            "format": "json"}
+
+        response = requests.get(geocoder_api_server, params=geocoder_params)
+
+        json_response = response.json()
+        if not json_response["response"]["GeoObjectCollection"]["featureMember"]:
+            print('Ничего не найдено')
+            return
+
+        toponym = json_response["response"]["GeoObjectCollection"][
+            "featureMember"][0]["GeoObject"]
+
         search_api_server = "https://search-maps.yandex.ru/v1/"
         api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
         latitude = 50 / (111 * 1000)
@@ -226,22 +243,24 @@ class Example(QWidget):
         spn = f'{longitude},{latitude}'
         search_params = {
             "apikey": api_key,
-            "text": ','.join(map(str, coords)),
+            "text": toponym['metaDataProperty']['GeocoderMetaData']['text'],
             "lang": "ru_RU",
-            "ll": ','.join(map(str, coords)),
-            "type": "biz"
+            "ll": ','.join(map(lambda x: f'{x:.6f}', coords)),
+            "spn": spn,
+            "type": "biz",
+            "results": 1,
+            "rspn": 1
         }
-
         response = requests.get(search_api_server, params=search_params)
-        if not response:
-            return
+
 
         json_response = response.json()
-
-        pprint(json_response)
+        if not json_response['features']:
+            print('Ничего не найдено')
+            return
         organization = json_response["features"][0]
         org_name = organization["properties"]["CompanyMetaData"]["name"]
-        org_address = organization["properties"]["CompanyMetaData"]["address"]
+        print(org_name)
 
 
 if __name__ == '__main__':
