@@ -48,9 +48,11 @@ class Example(QWidget):
         x, y = event.x(), event.y()
         if event.button() == Qt.LeftButton and 10 < x < SCREEN_SIZE[0] - 10 and 10 < y < SCREEN_SIZE[1] - 10:
             x, y = x - 10 - SCREEN_SIZE[0] // 2, y - 10 - SCREEN_SIZE[1] // 2
-            self.coords = (self.coords[0] + x * self.zoom / 360, self.coords[1] - y * self.zoom / 360)
-            self.getImage()
-            self.update_image()
+            coords = (self.coords[0] + x * self.zoom / 360, self.coords[1] - y * self.zoom / 360)
+            try:
+                self.handle_click(coords)
+            except Exception as e:
+                print(str(e))
 
     def getImage(self):
         geocoder_params = {
@@ -157,6 +159,32 @@ class Example(QWidget):
         self.address_field.setText(text)
         self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
         self.point = self.coords
+        self.getImage()
+        self.update_image()
+
+    def handle_click(self, coords):
+        geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+
+        geocoder_params = {
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            'geocode': ','.join(map(str, coords)),
+            "format": "json"}
+
+        response = requests.get(geocoder_api_server, params=geocoder_params)
+
+        json_response = response.json()
+        if not json_response["response"]["GeoObjectCollection"]["featureMember"]:
+            print('Ничего не найдено')
+            return
+
+        toponym = json_response["response"]["GeoObjectCollection"][
+            "featureMember"][0]["GeoObject"]
+        self.toponym = toponym
+        address = toponym['metaDataProperty']['GeocoderMetaData']['Address']
+        post_code = address['postal_code'] + ' ' if self.show_post_code and 'postal_code' in address else ''
+        text = post_code + toponym['metaDataProperty']['GeocoderMetaData']['text']
+        self.address_field.setText(text)
+        self.point = coords
         self.getImage()
         self.update_image()
 
