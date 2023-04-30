@@ -4,7 +4,7 @@ import sys
 import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout
 
 SCREEN_SIZE = [600, 450]
 
@@ -37,7 +37,7 @@ class Example(QWidget):
         if event.key() == Qt.Key_Right:
             self.coords = (self.coords[0] + self.zoom, self.coords[1])
         self.getImage()
-        self.initUI()
+        self.update_image()
 
     def getImage(self):
         map_request = f"http://static-maps.yandex.ru/1.x/?&ll={','.join(map(str, self.coords))}&spn={self.zoom},0.00619&l={self.map_type}"
@@ -54,24 +54,31 @@ class Example(QWidget):
             file.write(response.content)
 
     def initUI(self):
+        self.main_layout = QVBoxLayout(self)
         self.setGeometry(100, 100, *SCREEN_SIZE)
         self.setWindowTitle('Отображение карты')
-        self.pixmap = QPixmap(self.map_file)
-        self.image.move(0, 0)
-        self.image.resize(600, 450)
-        self.image.setPixmap(self.pixmap)
+        self.update_image()
 
-        self.map_type_btns = []
-        for label in ('map', 'sat', 'hybrid'):
+        self.btns_layout = QHBoxLayout(self)
+        for label in ('map', 'sat', 'sat,skl'):
             btn = QPushButton(self)
             btn.setText(label)
+            btn.setFocusPolicy(Qt.NoFocus)
             btn.clicked.connect(Example.decorate(self.change_map_type, label))
+            self.btns_layout.addWidget(btn)
 
+        self.main_layout.addWidget(self.image)
+        self.main_layout.addLayout(self.btns_layout)
+
+    def update_image(self):
+        self.pixmap = QPixmap(self.map_file)
+        self.image.resize(600, 450)
+        self.image.setPixmap(self.pixmap)
 
     def change_map_type(self, new_type):
         self.map_type = new_type
         self.getImage()
-        self.initUI()
+        self.update_image()
 
 
     @staticmethod
