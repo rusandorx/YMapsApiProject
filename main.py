@@ -235,6 +235,7 @@ class Example(QWidget):
 
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
+        self.toponym = toponym
 
         search_api_server = "https://search-maps.yandex.ru/v1/"
         api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
@@ -249,7 +250,6 @@ class Example(QWidget):
             "spn": spn,
             "type": "biz",
             "results": 1,
-            "rspn": 1
         }
         response = requests.get(search_api_server, params=search_params)
 
@@ -260,7 +260,8 @@ class Example(QWidget):
             return
         organization = json_response["features"][0]
         org_name = organization["properties"]["CompanyMetaData"]["name"]
-        print(org_name)
+        org_address = organization["properties"]["CompanyMetaData"]["address"]
+        self.address_field.setText(f'Название: {org_name}, адрес: {org_address}')
 
 
 if __name__ == '__main__':
