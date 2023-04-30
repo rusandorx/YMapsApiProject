@@ -4,7 +4,7 @@ import sys
 import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
 
 SCREEN_SIZE = [600, 450]
 
@@ -67,13 +67,48 @@ class Example(QWidget):
             btn.clicked.connect(Example.decorate(self.change_map_type, label))
             self.btns_layout.addWidget(btn)
 
+        self.search_layout = QHBoxLayout(self)
+        self.search_field = QLineEdit(self)
+        self.search_field.setFocusPolicy(Qt.NoFocus)
+
+        self.search_button = QPushButton(self)
+        self.search_button.setText('Найти')
+        self.search_button.setFocusPolicy(Qt.NoFocus)
+        self.search_layout.addWidget(self.search_field)
+        self.search_button.clicked.connect(self.search)
+        self.search_layout.addWidget(self.search_button)
+
         self.main_layout.addWidget(self.image)
         self.main_layout.addLayout(self.btns_layout)
+        self.main_layout.addLayout(self.search_layout)
 
     def update_image(self):
         self.pixmap = QPixmap(self.map_file)
         self.image.resize(600, 450)
         self.image.setPixmap(self.pixmap)
+
+    def search(self):
+        toponym_to_find = self.search_field.text()
+
+        geocoder_api_server = "http://geocode-maps.yandex.ru/1.x/"
+
+        geocoder_params = {
+            "apikey": "40d1649f-0493-4b70-98ba-98533de7710b",
+            "geocode": toponym_to_find,
+            "format": "json"}
+
+        response = requests.get(geocoder_api_server, params=geocoder_params)
+
+        if not response:
+            print('Ничего не найдено')
+            return
+
+        json_response = response.json()
+        toponym = json_response["response"]["GeoObjectCollection"][
+            "featureMember"][0]["GeoObject"]
+        self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
+        self.getImage()
+        self.update_image()
 
     def change_map_type(self, new_type):
         self.map_type = new_type
