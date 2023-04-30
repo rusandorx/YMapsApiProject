@@ -4,7 +4,7 @@ import sys
 import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton
 
 SCREEN_SIZE = [600, 450]
 
@@ -14,6 +14,7 @@ class Example(QWidget):
         super().__init__()
         self.zoom = 1
         self.coords = (37.617644, 55.755819)
+        self.map_type = 'map'
 
         self.image = QLabel(self)
         self.getImage()
@@ -39,7 +40,7 @@ class Example(QWidget):
         self.initUI()
 
     def getImage(self):
-        map_request = f"http://static-maps.yandex.ru/1.x/?&ll={','.join(map(str, self.coords))}&spn={self.zoom},0.00619&l=map"
+        map_request = f"http://static-maps.yandex.ru/1.x/?&ll={','.join(map(str, self.coords))}&spn={self.zoom},0.00619&l={self.map_type}"
         response = requests.get(map_request)
 
         if not response:
@@ -59,6 +60,26 @@ class Example(QWidget):
         self.image.move(0, 0)
         self.image.resize(600, 450)
         self.image.setPixmap(self.pixmap)
+
+        self.map_type_btns = []
+        for label in ('map', 'sat', 'hybrid'):
+            btn = QPushButton(self)
+            btn.setText(label)
+            btn.clicked.connect(Example.decorate(self.change_map_type, label))
+
+
+    def change_map_type(self, new_type):
+        self.map_type = new_type
+        self.getImage()
+        self.initUI()
+
+
+    @staticmethod
+    def decorate(func, obj):
+        def new_func():
+            return func(obj)
+
+        return new_func
 
     def closeEvent(self, event):
         os.remove(self.map_file)
