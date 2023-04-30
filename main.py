@@ -1,5 +1,7 @@
+import math
 import os
 import sys
+from pprint import pprint
 
 import requests
 from PyQt5.QtCore import Qt
@@ -48,10 +50,16 @@ class Example(QWidget):
         x, y = event.x(), event.y()
         if event.button() == Qt.LeftButton and 10 < x < SCREEN_SIZE[0] + 10 and 10 < y < SCREEN_SIZE[1] + 10:
             x, y = x - 10 - SCREEN_SIZE[0] // 2, y - 10 - SCREEN_SIZE[1] // 2
-            print(x, y)
             coords = (self.coords[0] + x * self.zoom / 180, self.coords[1] - y * self.zoom / 360)
             try:
                 self.handle_click(coords)
+            except Exception as e:
+                print(str(e))
+        if event.button() == Qt.RightButton and 10 < x < SCREEN_SIZE[0] + 10 and 10 < y < SCREEN_SIZE[1] + 10:
+            x, y = x - 10 - SCREEN_SIZE[0] // 2, y - 10 - SCREEN_SIZE[1] // 2
+            coords = (self.coords[0] + x * self.zoom / 180, self.coords[1] - y * self.zoom / 360)
+            try:
+                self.find_organization(coords)
             except Exception as e:
                 print(str(e))
 
@@ -209,6 +217,31 @@ class Example(QWidget):
 
     def closeEvent(self, event):
         os.remove(self.map_file)
+
+    def find_organization(self, coords):
+        search_api_server = "https://search-maps.yandex.ru/v1/"
+        api_key = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+        latitude = 50 / (111 * 1000)
+        longitude = 50 / (math.cos(math.radians(coords[1])) * 40_000 * 1000 / 360)
+        spn = f'{longitude},{latitude}'
+        search_params = {
+            "apikey": api_key,
+            "text": ','.join(map(str, coords)),
+            "lang": "ru_RU",
+            "ll": ','.join(map(str, coords)),
+            "type": "biz"
+        }
+
+        response = requests.get(search_api_server, params=search_params)
+        if not response:
+            return
+
+        json_response = response.json()
+
+        pprint(json_response)
+        organization = json_response["features"][0]
+        org_name = organization["properties"]["CompanyMetaData"]["name"]
+        org_address = organization["properties"]["CompanyMetaData"]["address"]
 
 
 if __name__ == '__main__':
