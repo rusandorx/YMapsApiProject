@@ -5,7 +5,8 @@ from pprint import pprint
 import requests
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit
+from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout, QLineEdit, \
+    QRadioButton
 
 SCREEN_SIZE = [600, 450]
 
@@ -17,6 +18,7 @@ class Example(QWidget):
         self.coords = (37.617644, 55.755819)
         self.map_type = 'map'
         self.point = None
+        self.show_post_code = False
 
         self.image = QLabel(self)
         self.getImage()
@@ -83,9 +85,13 @@ class Example(QWidget):
         self.search_button = QPushButton(self)
         self.search_button.setText('Найти')
         self.search_button.setFocusPolicy(Qt.NoFocus)
-        self.search_layout.addWidget(self.search_field)
         self.search_button.clicked.connect(self.search)
+        self.post_code_switch = QRadioButton(self)
+        self.post_code_switch.setText('Показывать почтовый индекс')
+        self.post_code_switch.toggled.connect(self.toggle_post_code)
+        self.search_layout.addWidget(self.search_field)
         self.search_layout.addWidget(self.search_button)
+        self.search_layout.addWidget(self.post_code_switch)
 
         self.clear_btn = QPushButton(self)
         self.clear_btn.setText('Сброс поискового результата')
@@ -99,6 +105,9 @@ class Example(QWidget):
         self.main_layout.addLayout(self.search_layout)
         self.main_layout.addWidget(self.clear_btn)
         self.main_layout.addWidget(self.address_field)
+
+    def toggle_post_code(self, enabled):
+        self.show_post_code = enabled
 
     def update_image(self):
         self.pixmap = QPixmap(self.map_file)
@@ -125,7 +134,11 @@ class Example(QWidget):
 
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
-        self.address_field.setText(toponym['metaDataProperty']['GeocoderMetaData']['text'])
+        text = (toponym['metaDataProperty']['GeocoderMetaData']['Address'][
+                    'postal_code'] + ' ' if self.show_post_code and 'postal_code' in
+                                            toponym['metaDataProperty']['GeocoderMetaData']['Address'] else '') + \
+               toponym['metaDataProperty']['GeocoderMetaData']['text']
+        self.address_field.setText(text)
         self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
         self.point = self.coords
         self.getImage()
