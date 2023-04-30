@@ -40,6 +40,7 @@ class Example(QWidget):
         if event.key() in (Qt.Key_PageUp, Qt.Key_PageDown, Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right):
             self.getImage()
             self.update_image()
+
     def getImage(self):
         geocoder_params = {
             'll': ','.join(map(str, self.coords)),
@@ -85,9 +86,16 @@ class Example(QWidget):
         self.search_button.clicked.connect(self.search)
         self.search_layout.addWidget(self.search_button)
 
+        self.clear_btn = QPushButton(self)
+        self.clear_btn.setText('Сброс поискового результата')
+        self.clear_btn.setFocusPolicy(Qt.NoFocus)
+        self.clear_btn.clicked.connect(self.clear_search)
+
         self.main_layout.addWidget(self.image)
         self.main_layout.addLayout(self.btns_layout)
         self.main_layout.addLayout(self.search_layout)
+        self.main_layout.addWidget(self.clear_btn)
+
 
     def update_image(self):
         self.pixmap = QPixmap(self.map_file)
@@ -119,11 +127,15 @@ class Example(QWidget):
         self.getImage()
         self.update_image()
 
+    def clear_search(self):
+        self.point = None
+        self.getImage()
+        self.update_image()
+
     def change_map_type(self, new_type):
         self.map_type = new_type
         self.getImage()
         self.update_image()
-
 
     @staticmethod
     def decorate(func, obj):
