@@ -134,10 +134,9 @@ class Example(QWidget):
 
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
-        text = (toponym['metaDataProperty']['GeocoderMetaData']['Address'][
-                    'postal_code'] + ' ' if self.show_post_code and 'postal_code' in
-                                            toponym['metaDataProperty']['GeocoderMetaData']['Address'] else '') + \
-               toponym['metaDataProperty']['GeocoderMetaData']['text']
+        address = toponym['metaDataProperty']['GeocoderMetaData']['Address']
+        post_code = address['postal_code'] + ' ' if self.show_post_code and 'postal_code' in address else ''
+        text = post_code + toponym['metaDataProperty']['GeocoderMetaData']['text']
         self.address_field.setText(text)
         self.coords = tuple(map(float, toponym["Point"]["pos"].split()))
         self.point = self.coords
