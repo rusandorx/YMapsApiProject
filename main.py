@@ -44,6 +44,14 @@ class Example(QWidget):
             self.getImage()
             self.update_image()
 
+    def mousePressEvent(self, event):
+        x, y = event.x(), event.y()
+        if event.button() == Qt.LeftButton and 10 < x < SCREEN_SIZE[0] - 10 and 10 < y < SCREEN_SIZE[1] - 10:
+            x, y = x - 10 - SCREEN_SIZE[0] // 2, y - 10 - SCREEN_SIZE[1] // 2
+            self.coords = (self.coords[0] + x * self.zoom / 360, self.coords[1] - y * self.zoom / 360)
+            self.getImage()
+            self.update_image()
+
     def getImage(self):
         geocoder_params = {
             'll': ','.join(map(str, self.coords)),
