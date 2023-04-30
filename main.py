@@ -1,6 +1,5 @@
 import os
 import sys
-from pprint import pprint
 
 import requests
 from PyQt5.QtCore import Qt
@@ -19,6 +18,7 @@ class Example(QWidget):
         self.map_type = 'map'
         self.point = None
         self.show_post_code = False
+        self.toponym = None
 
         self.image = QLabel(self)
         self.getImage()
@@ -108,6 +108,14 @@ class Example(QWidget):
 
     def toggle_post_code(self, enabled):
         self.show_post_code = enabled
+        if not self.address_field.text():
+            return
+        if enabled:
+            address = self.toponym['metaDataProperty']['GeocoderMetaData']['Address']
+            post_code = address['postal_code'] + ' ' if self.show_post_code and 'postal_code' in address else ''
+            self.address_field.setText(post_code + self.address_field.text())
+        else:
+            self.address_field.setText(self.toponym['metaDataProperty']['GeocoderMetaData']['text'])
 
     def update_image(self):
         self.pixmap = QPixmap(self.map_file)
@@ -134,6 +142,7 @@ class Example(QWidget):
 
         toponym = json_response["response"]["GeoObjectCollection"][
             "featureMember"][0]["GeoObject"]
+        self.toponym = toponym
         address = toponym['metaDataProperty']['GeocoderMetaData']['Address']
         post_code = address['postal_code'] + ' ' if self.show_post_code and 'postal_code' in address else ''
         text = post_code + toponym['metaDataProperty']['GeocoderMetaData']['text']
